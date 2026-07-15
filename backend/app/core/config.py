@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     # Redis (Architecture Section 4)
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # Supabase Storage (Architecture Section 4)
+    SUPABASE_URL: str = "http://localhost:8000" # Local mock default
+    SUPABASE_KEY: str = "dev_anon_key"
+
     # CORS — Production-safe defaults (Architecture Section 10)
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
@@ -86,6 +90,15 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Platform Collector Settings (Phase 6/7/8)
+    GITHUB_API_TOKEN: str = ""
+    GITHUB_API_URL: str = "https://api.github.com"
+    LEETCODE_API_URL: str = "https://leetcode.com"
+    CODEFORCES_API_URL: str = "https://codeforces.com/api"
+    COLLECTOR_TIMEOUT: int = 30
+    COLLECTOR_MAX_RETRIES: int = 3
+    COLLECTOR_CACHE_TTL: int = 3600
 
     model_config = SettingsConfigDict(
         env_file=".env",

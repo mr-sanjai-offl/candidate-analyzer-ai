@@ -113,6 +113,34 @@ class ForbiddenException(AppException):
         super().__init__(message=message, status_code=403, details=details)
 
 
+class BadRequestException(AppException):
+    """Exception raised when a request is malformed or invalid.
+
+    Returned as HTTP 400 Bad Request.
+    """
+
+    def __init__(
+        self,
+        message: str = "Bad request",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message=message, status_code=400, details=details)
+
+
+class InternalServerException(AppException):
+    """Exception raised for unexpected internal failures.
+
+    Returned as HTTP 500 Internal Server Error.
+    """
+
+    def __init__(
+        self,
+        message: str = "An internal server error occurred",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message=message, status_code=500, details=details)
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Register custom exception handlers with the FastAPI application.
 

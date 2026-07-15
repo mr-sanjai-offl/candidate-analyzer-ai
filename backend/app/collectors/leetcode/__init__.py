@@ -1,1 +1,1 @@
-"""LeetCode collector package — DSA performance analysis."""
+"""LeetCode collector __init__."""

@@ -1,1 +1,1 @@
-"""GitHub collector package — GitHub profile and repository analysis."""
+"""GitHub collector __init__."""

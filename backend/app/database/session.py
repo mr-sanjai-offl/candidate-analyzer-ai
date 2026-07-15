@@ -7,6 +7,7 @@ injection (Architecture Section 7).
 """
 
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -99,3 +100,24 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
+
+
+@asynccontextmanager
+async def get_db_session_ctx() -> AsyncGenerator[AsyncSession, None]:
+    """Provide an async database session context manager.
+
+    Useful for background tasks (e.g., Celery) that run outside
+    FastAPI dependency injection context.
+    """
+    global _async_session_factory
+    if _async_session_factory is None:
+        from app.core.config import get_settings
+        init_engine(get_settings())
+
+    async with _async_session_factory() as session:
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+

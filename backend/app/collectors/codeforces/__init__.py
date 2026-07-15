@@ -1,1 +1,1 @@
-"""Codeforces collector package — Competitive programming analysis."""
+"""Codeforces collector __init__."""
