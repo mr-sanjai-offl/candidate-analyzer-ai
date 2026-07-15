@@ -1,0 +1,77 @@
+# ==============================================================================
+# ApexGuidance AI — Docker Compose
+# Architecture Bible Section 4: Docker, PostgreSQL, Redis
+# ==============================================================================
+# Usage:
+#   docker compose up --build        Start all services
+#   docker compose down              Stop all services
+#   docker compose down -v           Stop and remove volumes
+# ==============================================================================
+
+services:
+  # --- FastAPI Backend ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: apexguidance-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - apexguidance-network
+
+  # --- PostgreSQL (Supabase PostgreSQL — Architecture Section 4) ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: apexguidance-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-apexguidance}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - apexguidance-network
+
+  # --- Redis (Architecture Section 4) ---
+  redis:
+    image: redis:7-alpine
+    container_name: apexguidance-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - apexguidance-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  apexguidance-network:
+    driver: bridge

@@ -1,0 +1,75 @@
+# ==============================================================================
+# ApexGuidance AI Backend — Tool Configuration
+# ==============================================================================
+# This file configures Ruff, Black, mypy, and pytest.
+# Dependencies are managed via requirements.txt (Architecture Section 5).
+# ==============================================================================
+
+# --- Ruff (Linter + Import Sorter) ---
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort (import sorting)
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "S",    # flake8-bandit (security)
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "DTZ",  # flake8-datetimez
+    "T20",  # flake8-print (no print() statements — Architecture Section 7)
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "PTH",  # flake8-use-pathlib
+    "PLW",  # pylint warnings
+]
+ignore = [
+    "B008",   # do not perform function calls in argument defaults (FastAPI Depends)
+    "S101",   # assert used — needed in tests
+    "RET504", # unnecessary assignment before return — sometimes improves readability
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+"alembic/**/*.py" = ["UP", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+# --- Black (Formatter) ---
+[tool.black]
+target-version = ["py312"]
+line-length = 100
+
+# --- mypy (Type Checker) ---
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "alembic.*"
+ignore_errors = true
+
+# --- pytest ---
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
