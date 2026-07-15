@@ -11,7 +11,7 @@ No ``print()`` statements are used anywhere in the application
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, override
 
 from app.core.config import Settings
@@ -37,7 +37,7 @@ class JSONFormatter(logging.Formatter):
             A single-line JSON string representing the log entry.
         """
         log_data: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),

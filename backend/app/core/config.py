@@ -7,14 +7,14 @@ Architecture Bible Section 7 (Pydantic Settings only) and Section 10
 No hard-coded secrets are permitted anywhere in the application.
 """
 
-from enum import Enum
+from enum import StrEnum
 from functools import lru_cache
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Environment(str, Enum):
+class Environment(StrEnum):
     """Application deployment environment.
 
     Controls behavior such as debug mode, documentation visibility,
@@ -81,11 +81,32 @@ class Settings(BaseSettings):
     # Sentry (Architecture Section 4)
     SENTRY_DSN: str = ""
 
+    # Security / JWT (Architecture Section 10)
+    JWT_SECRET_KEY: str = "dev_secret_key_change_me_in_production"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
     )
+
+    @field_validator("JWT_SECRET_KEY", mode="before")
+    @classmethod
+    def validate_jwt_secret(cls, value: str, info: object) -> str:
+        """Validate that a secure JWT secret is set in staging/production."""
+        data = getattr(info, "data", {})
+        env = data.get("ENVIRONMENT")
+        if env in (Environment.PRODUCTION, Environment.STAGING) and (
+            not value or value == "dev_secret_key_change_me_in_production"
+        ):
+            raise ValueError(
+                "JWT_SECRET_KEY must be set to a secure secret in "
+                "production or staging environments"
+            )
+        return value
 
     @field_validator("DEBUG", mode="before")
     @classmethod

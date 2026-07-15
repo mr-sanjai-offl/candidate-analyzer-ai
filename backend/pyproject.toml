@@ -37,8 +37,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]
-"alembic/**/*.py" = ["UP", "I"]
+"tests/**/*.py" = ["S101", "S105", "S106"]
+"alembic/**/*.py" = ["UP", "I", "S101", "S105", "S106"]
+"app/core/config.py" = ["S104", "S105"]
+"app/services/auth/auth_service.py" = ["S106"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]

@@ -85,6 +85,34 @@ class NotFoundException(AppException):
         super().__init__(message=message, status_code=404, details=details)
 
 
+class UnauthorizedException(AppException):
+    """Exception raised when authentication fails or is missing.
+
+    Returned as HTTP 401 Unauthorized.
+    """
+
+    def __init__(
+        self,
+        message: str = "Could not validate credentials",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message=message, status_code=401, details=details)
+
+
+class ForbiddenException(AppException):
+    """Exception raised when user lacks required role/permissions.
+
+    Returned as HTTP 403 Forbidden.
+    """
+
+    def __init__(
+        self,
+        message: str = "Permission denied",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message=message, status_code=403, details=details)
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Register custom exception handlers with the FastAPI application.
 

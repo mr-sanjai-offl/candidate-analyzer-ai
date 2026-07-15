@@ -30,6 +30,7 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Target metadata for autogenerate support.
 # Import all models here so that Base.metadata contains them.
+from app.database.models import User, RefreshToken, UserRole  # noqa: F401
 target_metadata = Base.metadata
 
 
