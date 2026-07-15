@@ -3,7 +3,6 @@
 import * as React from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore, UserSession } from '@/store/authStore'
-import { apiClient } from '@/lib/api-client'
 
 interface AuthContextType {
   user: UserSession | null
@@ -14,62 +13,69 @@ interface AuthContextType {
 
 const AuthContext = React.createContext<AuthContextType | null>(null)
 
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/forgot-password', '/reset-password']
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/components-preview']
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, isAuthenticated, accessToken, refreshToken, clearSession } = useAuthStore()
+  const store = useAuthStore()
   const [isLoading, setIsLoading] = React.useState(true)
+  const initRef = React.useRef(false)
 
+  // One-time silent auth check on mount
   React.useEffect(() => {
-    const initAuth = async () => {
-      if (isAuthenticated && accessToken) {
+    if (initRef.current) return
+    initRef.current = true
+
+    const init = async () => {
+      if (store.isAuthenticated && store.accessToken) {
         try {
-          await apiClient.get('/auth/me')
-        } catch (error) {
-          console.warn('Session verification failed on init:', error)
+          await store.initialize()
+        } catch {
+          store.clearSession()
         }
       }
       setIsLoading(false)
     }
+    init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-    initAuth()
-  }, [isAuthenticated, accessToken])
+  // Multi-tab sync: listen for storage changes
+  React.useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'apexguidance-auth-storage') {
+        // Zustand persist will auto-rehydrate, but we force a page refresh to sync UI
+        window.location.reload()
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
+  // Route guarding
   React.useEffect(() => {
     if (isLoading) return
+    const isPublicRoute = PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + '/'))
 
-    const isPublicRoute = PUBLIC_ROUTES.includes(pathname)
-
-    if (!isAuthenticated && !isPublicRoute) {
+    if (!store.isAuthenticated && !isPublicRoute) {
       router.replace('/login')
-    } else if (isAuthenticated && isPublicRoute && pathname !== '/') {
-      router.replace('/dashboard')
     }
-  }, [isAuthenticated, pathname, isLoading, router])
+  }, [store.isAuthenticated, pathname, isLoading, router])
 
   const logout = React.useCallback(async () => {
-    try {
-      if (refreshToken) {
-        await apiClient.post('/auth/logout', { refresh_token: refreshToken })
-      }
-    } catch (e) {
-      console.error('Logout request failed:', e)
-    } finally {
-      clearSession()
-      router.push('/login')
-    }
-  }, [refreshToken, clearSession, router])
+    await store.logout()
+    router.push('/login')
+  }, [store, router])
 
   const value = React.useMemo(
     () => ({
-      user,
-      isAuthenticated,
+      user: store.user,
+      isAuthenticated: store.isAuthenticated,
       isLoading,
       logout,
     }),
-    [user, isAuthenticated, isLoading, logout]
+    [store.user, store.isAuthenticated, isLoading, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -113,4 +119,28 @@ export function ProtectedRoute({
 
   return <>{children}</>
 }
+
+export function GuestRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
+
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard')
+    }
+  }, [isAuthenticated, isLoading, router])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (isAuthenticated) return null
+
+  return <>{children}</>
+}
+
 export { AuthContext }

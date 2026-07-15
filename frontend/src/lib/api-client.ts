@@ -126,11 +126,10 @@ apiClient.interceptors.response.use(
         })
 
         const { access_token, refresh_token } = refreshResponse.data
-        const currentUser = useAuthStore.getState().user
-
-        if (currentUser) {
-          useAuthStore.getState().setSession(currentUser, access_token, refresh_token)
-        }
+        useAuthStore.setState({
+          accessToken: access_token,
+          refreshToken: refresh_token,
+        })
 
         isRefreshing = false
         processQueue(null, access_token)
