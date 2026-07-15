@@ -100,6 +100,12 @@ class Settings(BaseSettings):
     COLLECTOR_MAX_RETRIES: int = 3
     COLLECTOR_CACHE_TTL: int = 3600
 
+    # AI Intelligence Layer settings
+    LLM_PROVIDER: str = "mock"  # mock | openai | openrouter
+    OPENAI_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
+
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
